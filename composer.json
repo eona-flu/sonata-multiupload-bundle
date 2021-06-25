@@ -11,8 +11,8 @@
     ],
     "require": {
         "php": "^7.1 || ^8.0",
-        "sonata-project/admin-bundle": "4.0.0-alpha-2",
-        "sonata-project/media-bundle": "dev-master#38a307eda83f5c248d38148ed6100ad7e528a84c"
+        "sonata-project/admin-bundle": "^4.0@dev",
+        "sonata-project/media-bundle": "dev-master"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.11",
