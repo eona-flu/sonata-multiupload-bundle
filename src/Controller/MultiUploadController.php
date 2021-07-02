@@ -3,6 +3,7 @@
 namespace SilasJoisten\Sonata\MultiUploadBundle\Controller;
 
 use SilasJoisten\Sonata\MultiUploadBundle\Form\MultiUploadType;
+use Sonata\AdminBundle\Bridge\Exporter\AdminExporter;
 use Sonata\AdminBundle\Controller\CRUDController;
 use Sonata\Doctrine\Model\ManagerInterface;
 use Sonata\MediaBundle\Controller\MediaAdminController;
@@ -36,7 +37,7 @@ class MultiUploadController extends CRUDController
         if (!$request->get('provider') && $request->isMethod('get')) {
             $pool = $this->get('sonata.media.pool');
 
-            return $this->render('@SonataMultiUpload/select_provider.html.twig', [
+            return $this->renderWithExtraParams('@SonataMultiUpload/select_provider.html.twig', [
                 'providers' => $pool->getProvidersByContext(
                     $request->get('context', $pool->getDefaultContext())
                 ),
@@ -96,12 +97,20 @@ class MultiUploadController extends CRUDController
         // set the theme for the current Admin Form
         $twig->getRuntime(FormRenderer::class)->setTheme($formView, $this->admin->getFilterTheme());
 
+        if ($this->has('sonata.admin.admin_exporter')) {
+            $exporter = $this->get('sonata.admin.admin_exporter');
+            \assert($exporter instanceof AdminExporter);
+            $exportFormats = $exporter->getAvailableFormats($this->admin);
+        }
+
+
         return $this->renderWithExtraParams($this->admin->getTemplateRegistry()->getTemplate('list'), [
             'action' => 'list',
             'form' => $formView,
             'datagrid' => $datagrid,
             'root_category' => $rootCategory,
             'csrf_token' => $this->getCsrfToken('sonata.batch'),
+            'export_formats' => $exportFormats ?? $this->admin->getExportFormats(),
         ]);
     }
 
@@ -117,12 +126,12 @@ class MultiUploadController extends CRUDController
 
         $form = $this->createMultiUploadForm($provider, $context);
         if (!$request->files->has('file')) {
-            return $this->render('@SonataMultiUpload/multi_upload.html.twig', [
+            return $this->renderWithExtraParams('@SonataMultiUpload/multi_upload.html.twig', [
                 'action' => 'multi_upload',
                 'form' => $form->createView(),
                 'provider' => $provider,
-                'maxUploadFilesize' => $this->container->getParameter('sonata_multi_upload.max_upload_filesize'),
-                'redirectTo' => $this->container->getParameter('sonata_multi_upload.redirect_to'),
+                'maxUploadFilesize' => $this->get('parameter_bag')->get('sonata_multi_upload.max_upload_filesize'),
+                'redirectTo' => $this->get('parameter_bag')->get('sonata_multi_upload.redirect_to'),
             ]);
         }
 
